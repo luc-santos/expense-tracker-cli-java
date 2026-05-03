@@ -11,6 +11,7 @@ public class ExpenseService {
     }
 
     public void createExpense(String description, double amount, String category, String date) {
+        validateExpense(description, amount, category, date);
         int id = getNextId();
 
         Expense expense = new Expense(id, description, amount, category, date);
@@ -19,6 +20,26 @@ public class ExpenseService {
         repository.saveExpenses(expenses);
 
         System.out.println("Expense created successfully!");
+    }
+
+    private void validateExpense(String description, double amount, String category, String date) {
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description cannot be empty.");
+        }
+
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero.");
+        }
+
+        if (category == null || category.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category cannot be empty.");
+        }
+
+        try {
+            LocalDate.parse(date);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD.");
+        }
     }
 
     public void listExpenses() {
@@ -67,7 +88,14 @@ public class ExpenseService {
     }
 
     public void filterByDate(String date) {
-        LocalDate targetDate = LocalDate.parse(date);
+        LocalDate targetDate;
+
+        try {
+            targetDate = LocalDate.parse(date);
+        } catch (Exception e) {
+            System.out.println("Invalid date format. Use YYYY-MM-DD.");
+            return;
+        }
         boolean found = false;
 
         for (Expense expense : expenses) {
@@ -149,12 +177,12 @@ public class ExpenseService {
     }
 
     public void deletePaidExpenses() {
-    boolean removed = expenses.removeIf(expense -> expense.isPaid());
+        boolean removed = expenses.removeIf(expense -> expense.isPaid());
 
-    if (!removed) {
-        System.out.println("No paid expenses to delete.");
-        return;
-    }
+        if (!removed) {
+            System.out.println("No paid expenses to delete.");
+            return;
+        }
 
     repository.saveExpenses(expenses);
     System.out.println("Paid expenses deleted successfully!");
